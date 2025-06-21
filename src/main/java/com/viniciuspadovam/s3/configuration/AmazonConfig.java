@@ -23,12 +23,14 @@ public class AmazonConfig {
 	S3Client s3Client() {
 		return S3Client.builder()
 			.region(Region.of(REGION))
-			.credentialsProvider(
-				StaticCredentialsProvider.create(
-                    AwsBasicCredentials.create(ACCESS_KEY, SECRET_KEY)
-                )
-			)
+			.credentialsProvider(credentials())
 			.build();
+	}
+	
+	private StaticCredentialsProvider credentials() {
+		return StaticCredentialsProvider.create(
+			AwsBasicCredentials.create(ACCESS_KEY, SECRET_KEY)
+        );
 	}
 	
 }

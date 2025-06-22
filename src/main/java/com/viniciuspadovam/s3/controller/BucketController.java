@@ -60,4 +60,10 @@ public class BucketController {
 			.body(new InputStreamResource(s3Object));
 	}
 	
+	@PostMapping("/create-bucket")
+	public ResponseEntity<String> createBucket(@RequestParam String bucketName) {
+		var bucketLocation = bucketService.createBucket(bucketName);
+		return ResponseEntity.status(HttpStatus.CREATED).body(bucketLocation);
+	}
+	
 }

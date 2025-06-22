@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.viniciuspadovam.s3.constants.FileValidFormats;
 import com.viniciuspadovam.s3.dto.BucketResponse;
@@ -16,13 +17,14 @@ import com.viniciuspadovam.s3.exception.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.Bucket;
+import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
@@ -82,7 +84,7 @@ public class BucketService {
 					.build();
 			PutObjectResponse response = s3Client.putObject(request, new File(data.filePath()).toPath());
 			return response.eTag();
-		} catch(Exception e) {
+		} catch(AwsServiceException e) {
 			log.error(e.getMessage());
 			throw new RuntimeException(e.getMessage());
 		}
@@ -100,9 +102,21 @@ public class BucketService {
 					.key(filePath)
 					.build();
 			return s3Client.getObject(request);			
-		} catch(NoSuchKeyException e) {
+		} catch(AwsServiceException aws) {
+			log.error("[downloadImage] error: \n" + aws.getMessage());
+			log.warn(aws.awsErrorDetails().toString());
+			throw new ResponseStatusException(aws.statusCode(), aws.getMessage(), new RuntimeException());
+		}
+	}
+	
+	public String createBucket(String bucketName) {
+		try {
+			CreateBucketResponse result = s3Client.createBucket(request -> request.bucket(bucketName));
+			return result.location();
+		} catch(AwsServiceException e) {
 			log.error(e.getMessage());
-			throw new ResourceNotFoundException(e.getMessage());
+			log.warn(e.awsErrorDetails().toString());
+			throw new ResponseStatusException(e.statusCode(), e.getMessage(), new RuntimeException());
 		}
 	}
 	

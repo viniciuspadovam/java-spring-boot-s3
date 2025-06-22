@@ -120,4 +120,14 @@ public class BucketService {
 		}
 	}
 	
+	public void deleteBucket(String bucketName) {
+		try {
+			s3Client.deleteBucket(request -> request.bucket(bucketName));
+		} catch(AwsServiceException e) {
+			log.error(e.getMessage());
+			log.warn(e.awsErrorDetails().toString());
+			throw new ResponseStatusException(e.statusCode(), e.getMessage(), new RuntimeException());
+		}
+	}
+	
 }

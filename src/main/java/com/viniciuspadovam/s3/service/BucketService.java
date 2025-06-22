@@ -1,6 +1,7 @@
 package com.viniciuspadovam.s3.service;
 
 import java.io.File;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,9 +17,11 @@ import com.viniciuspadovam.s3.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.Bucket;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
 import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
@@ -86,6 +89,19 @@ public class BucketService {
 	private boolean isValidImageFormat(String fileName) {
 		String extension = fileName.split("\\.")[1];
 		return FileValidFormats.validImageFormats.contains(extension);
+	}
+	
+	public InputStream downloadImage(String bucketName, String filePath) {
+		try {
+			GetObjectRequest request = GetObjectRequest.builder()
+					.bucket(bucketName)
+					.key(filePath)
+					.build();
+			return s3Client.getObject(request);			
+		} catch(NoSuchKeyException e) {
+			System.out.println(e.getLocalizedMessage());
+			throw new ResourceNotFoundException(e.getMessage());
+		}
 	}
 	
 }

@@ -2,12 +2,15 @@ package com.viniciuspadovam.s3.controller;
 
 import java.util.List;
 
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.viniciuspadovam.s3.dto.BucketResponse;
@@ -41,9 +44,20 @@ public class BucketController {
 	}
 	
 	@PostMapping("/upload-image")
-	public ResponseEntity<?> uploadImage(@RequestBody UploadObjectRequest data) {
+	public ResponseEntity<String> uploadImage(@RequestBody UploadObjectRequest data) {
 		String createdObjectTag = bucketService.uploadImage(data);
 		return ResponseEntity.status(HttpStatus.CREATED).body(createdObjectTag);
+	}
+	
+	@GetMapping("/download")
+	public ResponseEntity<InputStreamResource> downloadObject(
+		@RequestParam String bucketName, 
+		@RequestParam String filePath
+	) {
+		var s3Object = bucketService.downloadImage(bucketName, filePath);
+		return ResponseEntity.ok()
+			.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filePath + "\"")
+			.body(new InputStreamResource(s3Object));
 	}
 	
 }

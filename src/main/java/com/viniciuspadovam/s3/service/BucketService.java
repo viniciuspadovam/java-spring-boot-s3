@@ -15,6 +15,7 @@ import com.viniciuspadovam.s3.exception.InvalidImageFormatException;
 import com.viniciuspadovam.s3.exception.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.Bucket;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
@@ -27,6 +28,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BucketService {
 	
 	private final S3Client s3Client;
@@ -81,8 +83,8 @@ public class BucketService {
 			PutObjectResponse response = s3Client.putObject(request, new File(data.filePath()).toPath());
 			return response.eTag();
 		} catch(Exception e) {
-			System.err.println(e.getMessage());
-			throw new RuntimeException(e.getLocalizedMessage());
+			log.error(e.getMessage());
+			throw new RuntimeException(e.getMessage());
 		}
 	}
 	
@@ -99,7 +101,7 @@ public class BucketService {
 					.build();
 			return s3Client.getObject(request);			
 		} catch(NoSuchKeyException e) {
-			System.out.println(e.getLocalizedMessage());
+			log.error(e.getMessage());
 			throw new ResourceNotFoundException(e.getMessage());
 		}
 	}
